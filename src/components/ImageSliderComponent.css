@@ -4,18 +4,19 @@
   display: flex;
   flex-direction: column;
   border: 1px solid black;
+  border-radius: 8px;
 }
 
 .slides-and-arrow-btns-container {
   height: 100%;
   position: relative;
   overflow: hidden;
+  border-radius: 8px 8px 0 0;
 }
 
 .slides-container {
   position: relative;
   display: flex;
-  border: 1px solid red;
   height: 100%;
   transition: transform 0.5s ease-in-out;
 }

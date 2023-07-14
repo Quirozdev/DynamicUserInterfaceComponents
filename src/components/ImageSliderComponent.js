@@ -24,10 +24,13 @@ export class Slide {
 }
 
 export class ImageSliderComponent {
-  constructor(slide) {
+  constructor(imgUrl, alt) {
+    this.imageSlider = document.createElement('div');
+    this.imageSlider.classList.add('image-slider');
+
     this.slides = [];
-    this.slides.push(slide);
-    this.currentSlide = slide;
+    this.currentSlide = new Slide(0, imgUrl, alt);
+    this.slides.push(this.currentSlide);
   }
 
   addSlide(imageUrl, alt) {
@@ -40,6 +43,50 @@ export class ImageSliderComponent {
     this.currentSlide.DOMComponent.classList.add('current-slide');
   }
 
+  getPreviousSlideId() {
+    let previousSlideId = this.currentSlide.id - 1;
+    if (previousSlideId < 0) {
+      previousSlideId = this.slides.length - 1;
+    }
+    return previousSlideId;
+  }
+
+  getNextSlideId() {
+    let nextSlideId = this.currentSlide.id + 1;
+    if (nextSlideId >= this.slides.length) {
+      nextSlideId = 0;
+    }
+    return nextSlideId;
+  }
+
+  updateSelectedSlide(selectedSlideId) {
+    this.currentSlide.DOMComponent.classList.remove('current-slide');
+
+    const selectedSlide = this.slides[selectedSlideId];
+
+    this.setCurrentSlide(selectedSlide);
+
+    const slidesContainer = this.imageSlider.querySelector('.slides-container');
+
+    // with this, the slides container can 'slide' itself, as each image/slide
+    // occupy 100% of the slides container and the others are hidden with the overflow,
+    // the sliding effect gets simulated by moving the slides container horizontally
+    slidesContainer.style.transform = `translateX(${-100 * selectedSlideId}%)`;
+
+    this.updateNavigationBtn();
+  }
+
+  updateNavigationBtn() {
+    const currentSelectedNavigationBtn = this.imageSlider.querySelector(
+      '.navigation-btn.selected-navigation-btn'
+    );
+    currentSelectedNavigationBtn.classList.remove('selected-navigation-btn');
+
+    this.imageSlider
+      .querySelector(`.navigation-btn[data-slide-id="${this.currentSlide.id}"]`)
+      .classList.add('selected-navigation-btn');
+  }
+
   generatePreviousSlideBtn() {
     const previousSlideBtn = document.createElement('button');
     previousSlideBtn.classList.add('previous-slide-btn');
@@ -50,34 +97,7 @@ export class ImageSliderComponent {
     );
 
     previousSlideBtn.addEventListener('click', () => {
-      const currentSlide = this.currentSlide;
-      const currentSlideId = currentSlide.id;
-
-      let previousSlideId = currentSlideId - 1;
-      if (previousSlideId < 0) {
-        previousSlideId = this.slides.length - 1;
-      }
-
-      const previousSlide = this.slides[previousSlideId].DOMComponent;
-
-      this.setCurrentSlide(this.slides[previousSlideId]);
-
-      currentSlide.DOMComponent.classList.remove('current-slide');
-      previousSlide.classList.add('current-slide');
-
-      const slidesContainer = document.querySelector('.slides-container');
-      slidesContainer.style.transform = `translateX(${
-        -100 * previousSlideId
-      }%)`;
-
-      const currentSelectedNavigationBtn = document.querySelector(
-        '.navigation-btn.selected-navigation-btn'
-      );
-      currentSelectedNavigationBtn.classList.remove('selected-navigation-btn');
-
-      document
-        .querySelector(`.navigation-btn[data-slide-id="${previousSlideId}"]`)
-        .classList.add('selected-navigation-btn');
+      this.updateSelectedSlide(this.getPreviousSlideId());
     });
 
     return previousSlideBtn;
@@ -93,33 +113,7 @@ export class ImageSliderComponent {
     );
 
     nextSlideBtn.addEventListener('click', () => {
-      const currentSlide = this.currentSlide;
-      const currentSlideId = currentSlide.id;
-
-      let nextSlideId = currentSlideId + 1;
-      if (nextSlideId >= this.slides.length) {
-        nextSlideId = 0;
-      }
-
-      const nextSlide = this.slides[nextSlideId].DOMComponent;
-
-      this.setCurrentSlide(this.slides[nextSlideId]);
-
-      currentSlide.DOMComponent.classList.remove('current-slide');
-
-      nextSlide.classList.add('current-slide');
-
-      const slidesContainer = document.querySelector('.slides-container');
-      slidesContainer.style.transform = `translateX(${-100 * nextSlideId}%)`;
-
-      const currentSelectedNavigationBtn = document.querySelector(
-        '.navigation-btn.selected-navigation-btn'
-      );
-      currentSelectedNavigationBtn.classList.remove('selected-navigation-btn');
-
-      document
-        .querySelector(`.navigation-btn[data-slide-id="${nextSlideId}"]`)
-        .classList.add('selected-navigation-btn');
+      this.updateSelectedSlide(this.getNextSlideId());
     });
 
     return nextSlideBtn;
@@ -152,27 +146,10 @@ export class ImageSliderComponent {
       }
       navigationBtn.setAttribute('data-slide-id', slide.id);
       navigationBtn.addEventListener('click', (e) => {
-        const currentSelectedNavigationBtn = document.querySelector(
-          '.navigation-btn.selected-navigation-btn'
-        );
-        currentSelectedNavigationBtn.classList.remove(
-          'selected-navigation-btn'
-        );
-
-        e.currentTarget.classList.add('selected-navigation-btn');
-        const currentSlide = this.currentSlide;
         const slideIdToNavigate = Number(
           e.currentTarget.getAttribute('data-slide-id')
         );
-        const slideToNavigate = document.querySelector(
-          `.slide[data-slide-id="${slideIdToNavigate}"]`
-        );
-
-        currentSlide.DOMComponent.classList.remove('current-slide');
-        slideToNavigate.classList.add('current-slide');
-        document.querySelector(
-          '.slides-container'
-        ).style.transform = `translateX(${-100 * slideIdToNavigate}%)`;
+        this.updateSelectedSlide(slideIdToNavigate);
       });
 
       navigationBtnsContainer.appendChild(navigationBtn);
@@ -182,9 +159,6 @@ export class ImageSliderComponent {
   }
 
   render() {
-    const imageSlider = document.createElement('div');
-    imageSlider.classList.add('image-slider');
-
     const slidesAndArrowBtnsContainer = document.createElement('div');
     slidesAndArrowBtnsContainer.classList.add(
       'slides-and-arrow-btns-container'
@@ -194,7 +168,7 @@ export class ImageSliderComponent {
     slidesContainer.classList.add('slides-container');
 
     this.slides.forEach((slide) => {
-      slidesContainer.appendChild(slide.generateDOMComponent());
+      slidesContainer.appendChild(slide.DOMComponent);
     });
 
     this.setCurrentSlide(this.slides[0]);
@@ -209,9 +183,9 @@ export class ImageSliderComponent {
     slidesAndArrowBtnsContainer.appendChild(previousSlideArrowBtn);
     slidesAndArrowBtnsContainer.appendChild(nextSlideArrowBtn);
 
-    imageSlider.appendChild(slidesAndArrowBtnsContainer);
-    imageSlider.appendChild(navigationBtnsContainer);
+    this.imageSlider.appendChild(slidesAndArrowBtnsContainer);
+    this.imageSlider.appendChild(navigationBtnsContainer);
 
-    return imageSlider;
+    return this.imageSlider;
   }
 }
