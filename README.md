@@ -3,7 +3,7 @@
 Practice for the "Javascript Course" of The Odin Project
 
 Live Demo:
-https://quirozdev.github.io/TodoApp/
+https://quirozdev.github.io/DynamicUserInterfaceComponents/
 
 Credits for the images:
 https://pixabay.com/es/photos/europeo-de-pelo-corto-gato-gatito-8107433/
